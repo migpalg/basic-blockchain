@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Response, status
 from blockchain.proof import proof_of_work
 from ..dependencies import chain
 
@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.get('/')
+@router.get('')
 def read_blocks():
     blocks = chain.get_chain()
 
@@ -20,7 +20,19 @@ def read_blocks():
     }
 
 
-@router.post('/')
+@router.get('/validate_chain')
+def validate_chain(response: Response):
+    is_valid = chain.validate()
+
+    if not is_valid:
+        response.status_code = status.HTTP_417_EXPECTATION_FAILED
+
+    return {
+        'message': 'the chain is valid' if is_valid else 'the chain is invalid'
+    }
+
+
+@router.post('')
 def mine_block():
     last_block = chain.get_last_block()
     previous_proof = last_block.proof
